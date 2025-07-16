@@ -335,7 +335,7 @@ function calculateAvailable(type, dmValue) {
 
 // Calculate mail modifiers
 function 
-calculateMailMods(socDM = 0, maxRank = 0, freightTotal = 0) {
+calculateMailMods(socDM = 0, maxRank = 0, freightTotal = 0, isArmed = 0) {
     let mods = [];
     
    // Only A and B class starports get mail
@@ -365,14 +365,22 @@ calculateMailMods(socDM = 0, maxRank = 0, freightTotal = 0) {
         freightTotal >= range.min && freightTotal <= range.max
     );
     const freightDM = freightRange ? freightRange.dm : 0;
-    mods.push(`Freight DM : ${freightDM >= 0 ? '+' : ''}${freightDM}`);
-    mods.push(`Add Is Ship Armed DM+ here`)
-
-
+    mods.push(`Freight Mail DM : ${freightDM >= 0 ? '+' : ''}${freightDM}`);
+    if(isArmed === 1) mods.push (`Ship is Armed : +2`)
+        else(mods.push (`Ship is Unarmed : 0`))
     return mods;
 }
 
-function calculateMailAvailable(mailTotal) {}
+function calculateMailAvailable(mailTotal) {
+
+    const roll = rollDice(2)
+    if(roll.diceTotal + mailTotal > 11){
+        mail = rollDice(1).diceTotal
+    }else{
+        mail = 0   
+    }
+    return mail;
+}
 
 // Calculate total modifier
 function calculateTotal(modifiers) {
@@ -553,23 +561,20 @@ new Dialog({
                 const maxRank = parseInt(html.find("#max-rank")[0].value) || 0;
                 const destZone = parseInt(html.find("#dest-zone")[0].value) || 0;
                 const originZone = parseInt(html.find("#origin-zone")[0].value) || 0;
+                const isArmed = html.find("#ship-armed")[0].checked ? 1 : 0;
                                 
                 const freightRoll = skillRoll(freightSkill)
                 const passengerRoll = skillRoll(passengerSkill)
                 
                 const freightMods = calculateFreightMods(origin, destination, destZone, originZone, parsecs, freightRoll.effect,freightSkill );
                 const freightTotal = calculateTotal(freightMods);
-                const mailMods = calculateMailMods(socDM, maxRank, freightTotal);
+                const mailMods = calculateMailMods(socDM, maxRank, freightTotal,isArmed);
                 const mailTotal = calculateTotal(mailMods);
+                const mailAvailable = calculateMailAvailable(mailTotal)
                 const passengerMods = calculatePassengerMods(origin, destination, stewardRank, destZone, originZone, parsecs, passengerRoll.effect,passengerSkill);
                 const passengerTotal = calculateTotal(passengerMods);
                 const freightSizes = freightLotSizes()
-
-                const test = calculateAvailable("Freight",freightRoll.effect -4 + freightTotal)
-                console.log(`test ${test}`)
                 
-                const test2 = calculateAvailable("Freight",9)
-                console.log(`test ${test2}`)
 
                 console.log(`F: ${freightRoll.total}`)
                 console.log(`P: ${passengerRoll.total}`)
@@ -703,9 +708,8 @@ new Dialog({
     <div style="border: 1px solid #e74c3c; padding: 10px; border-radius: 5px;">
         <h4 style="margin-top: 0; color: #e74c3c;">Mail</h4>
         <div style="font-size: 12px;">
-            <strong>Mail (5 ton lots):</strong><br>
-            (no skill)<br>
-            2d6${mailTotal >= 0 ? '+' : ''}${mailTotal}
+            <strong>Mail</strong><br>
+             There are ${mailAvailable} lots of mail (${mailAvailable*5} tons), you must take all lots
         </div>
     </div>
 
