@@ -403,7 +403,7 @@ let dialogContent = `
             <div style="margin-bottom: 10px;">
                 <label for="origin-uwp"><strong>UWP:</strong></label>
                 <input type="text" id="origin-uwp" style="width: 100%; margin-top: 5px; font-family: monospace; font-size: 14px;" 
-                       placeholder="A867A69-C" value="D786799-5" maxlength="10">
+                       placeholder="A867A69-C"  maxlength="10">
             </div>
             <div>
                 <label for="origin-zone"><strong>Zone Type:</strong></label>
@@ -424,7 +424,7 @@ let dialogContent = `
             <div style="margin-bottom: 10px;">
                 <label for="dest-uwp"><strong>UWP:</strong></label>
                 <input type="text" id="dest-uwp" style="width: 100%; margin-top: 5px; font-family: monospace; font-size: 14px;" 
-                       placeholder="C564658-8" value="C564658-8" maxlength="10">
+                       placeholder="C564658-8"  maxlength="10">
             </div>
             <div>
                 <label for="dest-zone"><strong>Zone Type:</strong></label>
