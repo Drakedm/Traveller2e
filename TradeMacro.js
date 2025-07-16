@@ -693,14 +693,14 @@ new Dialog({
         <h4 style="margin-top: 0; color: #3498db;">Freight</h4>
         <div style="font-size: 12px;">
             <strong>Major Cargo:</strong><br>
-            FreightDM ${freightTotal} + Major ${-4}  : ${ freightTotal -4}<br>
-            Available lots : ${calculateAvailable("Freight",freightTotal -4 )}D6*${freightSizes.Major} Ton Lots <br>
+            <!-- FreightDM ${freightTotal} + Major ${-4}  : ${ freightTotal -4} -->
+            Available lots : ${rollDice(calculateAvailable("Freight",freightTotal -4)).diceTotal}*${freightSizes.Major} Ton Lots <br>
             <strong>Minor Cargo :</strong><br>
-            FreightDM ${freightTotal} + Minor ${0}  : ${ freightTotal -0}<br>
-            Available lots : ${calculateAvailable("Freight",freightTotal )}D6*${freightSizes.Minor} Ton Lots<br>
+            <!-- FreightDM ${freightTotal} + Minor ${0}  : ${ freightTotal -0}-->
+            Available lots : ${rollDice(calculateAvailable("Freight",freightTotal)).diceTotal}*${freightSizes.Minor} Ton Lots<br>
             <strong>Incidental Cargo :</strong><br>
-            FreightDM ${freightTotal} + Incidental ${+2}  : ${ freightTotal +2}<br>
-            Available lots : ${calculateAvailable("Freight",freightTotal +2 )}D6*${freightSizes.Incidental} Ton Lots
+            <!-- FreightDM ${freightTotal} + Incidental ${+2}  : ${ freightTotal +2}-->
+            Available lots : ${rollDice(calculateAvailable("Freight",freightTotal +2)).diceTotal}*${freightSizes.Incidental} Ton Lots
         </div>
     </div>
 
@@ -708,7 +708,7 @@ new Dialog({
     <div style="border: 1px solid #e74c3c; padding: 10px; border-radius: 5px;">
         <h4 style="margin-top: 0; color: #e74c3c;">Mail</h4>
         <div style="font-size: 12px;">
-            <strong>Mail</strong><br>
+            <strong>Mail Available</strong><br>
              There are ${mailAvailable} lots of mail (${mailAvailable*5} tons), you must take all lots
         </div>
     </div>
@@ -717,14 +717,18 @@ new Dialog({
     <div style="border: 1px solid #f39c12; padding: 10px; border-radius: 5px;">
         <h4 style="margin-top: 0; color: #f39c12;">Passengers</h4>
         <div style="font-size: 12px;">
-            <strong>High:</strong><br> PassengerDM ${passengerTotal} HighDM: +${-4} : ${passengerTotal -4}<br>
-            Available High Passengers : ${calculateAvailable("Passengers",passengerTotal -4 )}D6<br>
-            <strong>Medium:</strong><br> PassengerDM ${passengerTotal} MediumDM: +${0} : ${passengerTotal}<br>
-            Available Medium Passengers : ${calculateAvailable("Passengers",passengerTotal )}D6<br>
-            <strong>Basic:</strong><br> PassengerDM ${passengerTotal} BasicDM: +${0} : ${passengerTotal}<br>
-            Available Basic Passengers : ${calculateAvailable("Passengers",passengerTotal)}D6<br>
-            <strong>Low:</strong><br> PassengerDM ${passengerTotal} LowDM: +${+2} : ${passengerTotal +2}<br>
-            Available Low Passengers : ${calculateAvailable("Passengers",passengerTotal +2 )}D6
+            <strong>High:</strong><br> 
+            <!-- PassengerDM ${passengerTotal} HighDM: +${-4} : ${passengerTotal -4} --> 
+            Available High Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal -4 )).diceTotal}<br>
+            <strong>Medium:</strong><br> 
+             <!--  PassengerDM ${passengerTotal} MediumDM: +${0} : ${passengerTotal} -->
+            Available Medium Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal )).diceTotal}<br>
+            <strong>Basic:</strong><br> 
+             <!-- PassengerDM ${passengerTotal} BasicDM: +${0} : ${passengerTotal} -->
+            Available Basic Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal)).diceTotal}<br>
+            <strong>Low:</strong><br> 
+             <!-- PassengerDM ${passengerTotal} LowDM: +${+2} : ${passengerTotal +2} -->
+            Available Low Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal +2 )).diceTotal}
         </div>
     </div>
                 `;
