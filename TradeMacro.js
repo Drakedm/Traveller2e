@@ -1,5 +1,5 @@
-// Daves TradeMacro spreadsheets are for losers!!!!
-// Creates a popup dialog to enter two UWPs and calculate trade modifiers
+// Daves Trade Macro spreadsheets are for losers!!!! (or people who are smarter than me!)
+
 
 //TODO
 
@@ -9,13 +9,13 @@
 //DONE - Get Player Stats for Soc, Steward, Broker, Streetwise, Carouse  
 //UWP/travellerMap/wiki API Calls
 //DONE - Add FreightDM to Mail
-//Add Roll/Tables for available Cargo/passengers
-//Add Mail Roll
+//DONE - Roll/Tables for available Cargo/passengers
+//DONE -Add Mail Roll
 //DONE - DM tables for amount of Cargo/Freight/Passengers
 //DONE - Add selectable skills for Freight/Passengers
 //DONE - Add in Rolls for skills
 //Add Difficulty to skill roll
-//Add Cargo lot size rolls (1Dx10Ton Major 1Dx5Ton Minor 1DX1 Incidental)  - freightLotSizes function
+//DONE - Add Cargo lot size rolls (1Dx10Ton Major 1Dx5Ton Minor 1DX1 Incidental)  - freightLotSizes function
 
 //ACTOR STUFF --------------------------------------------------------------------------------------------
 //Get Actor Details
