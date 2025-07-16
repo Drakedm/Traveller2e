@@ -1,4 +1,4 @@
-// Daves Trade Macro spreadsheets are for losers!!!! (or people who are smarter than me!)
+// Twisteds Trade Macro spreadsheets are for losers!!!! (or people who are smarter than me!)
 
 
 //TODO
