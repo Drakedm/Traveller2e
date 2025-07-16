@@ -297,31 +297,31 @@ function rollDice(numberOfDice) {
 
 function calculateAvailable(type, dmValue) {
     const ranges = [
-        { DM: 0, Freight: 0, passengers: 0 },
-        { DM: 1, Freight: 0, passengers: 0 },
-        { DM: 2, Freight: 1, passengers: 1 },
-        { DM: 3, Freight: 1, passengers: 1 },
-        { DM: 4, Freight: 2, passengers: 2 },
-        { DM: 5, Freight: 2, passengers: 2 },
-        { DM: 6, Freight: 3, passengers: 2 },
-        { DM: 7, Freight: 3, passengers: 3 },
-        { DM: 8, Freight: 3, passengers: 3 },
-        { DM: 9, Freight: 4, passengers: 3 },
-        { DM: 10, Freight: 4, passengers: 3 },
-        { DM: 11, Freight: 4, passengers: 4 },
-        { DM: 12, Freight: 5, passengers: 4 },
-        { DM: 13, Freight: 5, passengers: 4 },
-        { DM: 14, Freight: 5, passengers: 5 },
-        { DM: 15, Freight: 6, passengers: 5 },
-        { DM: 16, Freight: 6, passengers: 6 },
-        { DM: 17, Freight: 7, passengers: 7 },
-        { DM: 18, Freight: 8, passengers: 8 },
-        { DM: 19, Freight: 9, passengers: 9 },
-        { DM: 20, Freight: 10, passengers: 10 }
+        { DM: 0, Freight: 0, Passengers: 0 },
+        { DM: 1, Freight: 0, Passengers: 0 },
+        { DM: 2, Freight: 1, Passengers: 1 },
+        { DM: 3, Freight: 1, Passengers: 1 },
+        { DM: 4, Freight: 2, Passengers: 2 },
+        { DM: 5, Freight: 2, Passengers: 2 },
+        { DM: 6, Freight: 3, Passengers: 2 },
+        { DM: 7, Freight: 3, Passengers: 3 },
+        { DM: 8, Freight: 3, Passengers: 3 },
+        { DM: 9, Freight: 4, Passengers: 3 },
+        { DM: 10, Freight: 4, Passengers: 3 },
+        { DM: 11, Freight: 4, Passengers: 4 },
+        { DM: 12, Freight: 5, Passengers: 4 },
+        { DM: 13, Freight: 5, Passengers: 4 },
+        { DM: 14, Freight: 5, Passengers: 5 },
+        { DM: 15, Freight: 6, Passengers: 5 },
+        { DM: 16, Freight: 6, Passengers: 6 },
+        { DM: 17, Freight: 7, Passengers: 7 },
+        { DM: 18, Freight: 8, Passengers: 8 },
+        { DM: 19, Freight: 9, Passengers: 9 },
+        { DM: 20, Freight: 10, Passengers: 10 }
     ];
     
     // Validate type parameter
-    if (type !== "Freight" && type !== "passengers") {
+    if (type !== "Freight" && type !== "Passengers") {
         return -1; // or throw an error
     }
     
@@ -352,9 +352,23 @@ calculateMailMods(socDM = 0, maxRank = 0, freightTotal = 0) {
   */
     if (socDM !== 0) mods.push(`Social Standing DM: ${socDM > 0 ? '+' : ''}${socDM}`);
     if (maxRank >= 1) mods.push(`Naval/Scout Rank ${maxRank}: +${maxRank}`);
-    mods.push (`Freight DM : +${freightTotal}`)
-
+    
+    const freightRanges = [
+        { min: -Infinity, max: -10, dm: -2 },
+        { min: -9, max: -5, dm: -1 },
+        { min: -4, max: 4, dm: 0 },
+        { min: 5, max: 9, dm: +1 },
+        { min: 10, max: Infinity, dm: +1 }
+    ];
+    
+    const freightRange = freightRanges.find(range => 
+        freightTotal >= range.min && freightTotal <= range.max
+    );
+    const freightDM = freightRange ? freightRange.dm : 0;
+    mods.push(`Freight DM : ${freightDM >= 0 ? '+' : ''}${freightDM}`);
     mods.push(`Add Is Ship Armed DM+ here`)
+
+
     return mods;
 }
 
@@ -415,7 +429,26 @@ let dialogContent = `
             <div id="dest-breakdown" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
         </div>
     </div>
-        <div style="border: 1px solid #8e44ad; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+    
+<div style="border: 1px solid #e74c3c; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+    <h3 style="margin-top: 0; color: #e74c3c;">Ship Modifiers</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="margin-bottom: 15px;">
+            <label for="parsec"><strong>Number of Parsecs:</strong></label><br>
+            <small style="font-size: 11px; color: #666;">Total Number of Parsecs to Travel</small><br>
+            <input type="number" id="parsec" style="width: 50%; margin-top: 5px;" placeholder="Enter parsecs..." value="1" >
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label for="ship-armed" style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="ship-armed" style="margin-right: 8px;" checked>
+                <strong>Ship Armed</strong>
+            </label>
+            <small style="font-size: 11px; color: #666; margin-left: 24px;">Ship is equipped with weapons</small>
+        </div>
+    </div>
+</div>
+    
+    <div style="border: 1px solid #8e44ad; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
         <h3 style="margin-top: 0; color: #8e44ad;">Character Modifiers</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <div>
@@ -441,14 +474,7 @@ let dialogContent = `
                         <option value="6">Rank 6+</option>
                     </select>
                 </div>
-                <div style="margin-bottom: 15px;">
-                    <label for="parsec"><strong>Number of Parsecs:</strong></label>
-                    <br>
-                    <small style="font-size: 11px; color: #666;">Total Number of Parsecs to Travel</small>
-                    <br>
-                    <input type="number" id="parsec" style="width: 50%; margin-top: 5px;" placeholder="Enter parsecs..." value="1" >
-                </div>
-            </div>
+             </div>
             <div>
                 <div style="margin-bottom: 15px;">
                     <label for="steward-dm"><strong>Steward Skill:</strong></label>
@@ -483,11 +509,13 @@ let dialogContent = `
             </div>
         </div>
     </div>
+    
     <div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
         <h4 style="margin-top: 0;">UWP Reference:</h4>
         <p style="margin: 5px 0; font-size: 12px;"><strong>Format:</strong> ABCDEFG-H (Starport/Size/Atmosphere/Hydrographics/Population/Government/Law-Tech)</p>
         <p style="margin: 5px 0; font-size: 12px;"><strong>Hex Values:</strong> 0-9=0-9, A=10, B=11, C=12, D=13, E=14, F=15, etc.</p>
     </div>
+    
     <div id="trade-results" style="display: none; border: 2px solid #27ae60; padding: 15px; border-radius: 5px; background-color: #f8fff8;">
         <h3 style="margin-top: 0; color: #27ae60;">Trade Calculation Results</h3>
         <div id="results-content"></div>
@@ -661,13 +689,13 @@ new Dialog({
         <div style="font-size: 12px;">
             <strong>Major Cargo:</strong><br>
             FreightDM ${freightTotal} + Major ${-4}  : ${ freightTotal -4}<br>
-            Available lots : ${calculateAvailable("Freight",freightTotal -4 )}*${freightSizes.Major} Ton Lots <br>
+            Available lots : ${calculateAvailable("Freight",freightTotal -4 )}D6*${freightSizes.Major} Ton Lots <br>
             <strong>Minor Cargo :</strong><br>
             FreightDM ${freightTotal} + Minor ${0}  : ${ freightTotal -0}<br>
-            Available lots : ${calculateAvailable("Freight",freightTotal )}*${freightSizes.Minor} Ton Lots<br>
+            Available lots : ${calculateAvailable("Freight",freightTotal )}D6*${freightSizes.Minor} Ton Lots<br>
             <strong>Incidental Cargo :</strong><br>
             FreightDM ${freightTotal} + Incidental ${+2}  : ${ freightTotal +2}<br>
-            Available lots : ${calculateAvailable("Freight",freightTotal +2 )}*${freightSizes.Incidental} Ton Lots
+            Available lots : ${calculateAvailable("Freight",freightTotal +2 )}D6*${freightSizes.Incidental} Ton Lots
         </div>
     </div>
 
@@ -685,10 +713,14 @@ new Dialog({
     <div style="border: 1px solid #f39c12; padding: 10px; border-radius: 5px;">
         <h4 style="margin-top: 0; color: #f39c12;">Passengers</h4>
         <div style="font-size: 12px;">
-            <strong>High:</strong> ${passengerSkill}: Roll Effect: +${passengerRoll.effect}, + PassengerDM ${passengerTotal} HighDM: +${-4} : ${passengerRoll.effect + passengerTotal -4}<br>
-            <strong>Medium:</strong>  ${passengerSkill}: Roll Effect: +${passengerRoll.effect}, + PassengerDM ${passengerTotal} MediumDM: +${0} : ${passengerRoll.effect + passengerTotal }<br>
-            <strong>Basic:</strong>  ${passengerSkill}: Roll Effect: +${passengerRoll.effect}, + PassengerDM ${passengerTotal} BasicDM: +${0} : ${passengerRoll.effect + passengerTotal }<br>
-            <strong>Low:</strong>  ${passengerSkill}: Roll Effect: +${passengerRoll.effect}, + PassengerDM ${passengerTotal} LowDM: +${+2} : ${passengerRoll.effect + passengerTotal +2}<br>
+            <strong>High:</strong><br> PassengerDM ${passengerTotal} HighDM: +${-4} : ${passengerTotal -4}<br>
+            Available High Passengers : ${calculateAvailable("Passengers",passengerTotal -4 )}D6<br>
+            <strong>Medium:</strong><br> PassengerDM ${passengerTotal} MediumDM: +${0} : ${passengerTotal}<br>
+            Available Medium Passengers : ${calculateAvailable("Passengers",passengerTotal )}D6<br>
+            <strong>Basic:</strong><br> PassengerDM ${passengerTotal} BasicDM: +${0} : ${passengerTotal}<br>
+            Available Basic Passengers : ${calculateAvailable("Passengers",passengerTotal)}D6<br>
+            <strong>Low:</strong><br> PassengerDM ${passengerTotal} LowDM: +${+2} : ${passengerTotal +2}<br>
+            Available Low Passengers : ${calculateAvailable("Passengers",passengerTotal +2 )}D6
         </div>
     </div>
                 `;
