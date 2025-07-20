@@ -101,6 +101,19 @@ const selectedToken = canvas.tokens.controlled[0];
 
 ///TRADE STUFF ------------------------------------------------------------------------------------------
 // UWP characteristic names and descriptions
+async function getUWPfromTravellermapApi(worldName, sectorName) { //faster with given sectorName
+    const searchQuery = worldName + (sectorName ? ' in:"'+sectorName+'"' : "");
+    const url = 'https://travellermap.com/api/search?q=' + encodeURIComponent(searchQuery);
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Response status: ${response.status}`);
+        const json = await response.json();
+        return (json.Results.Items.length > 0) ? json.Results.Items[0].World.Uwp : null;
+    } catch (error) {
+        console.error("Traveller API call failed: " + error.message);
+    }
+}
+// Convert
 const uwpCharacteristics = [
     { name: "Starport", code: "A", description: "Quality of starport (A-X)" },
     { name: "Size", code: "B", description: "World size (0-A)" },
@@ -110,9 +123,9 @@ const uwpCharacteristics = [
     { name: "Government", code: "F", description: "Government type (0-F)" },
     { name: "Law Level", code: "G", description: "Law level (0-J)" },
     { name: "Tech Level", code: "H", description: "Technology level (0-G+)" }
-];
+]; 
 
-// Convert hex character to number
+ //hex character to number
 function hexToNumber(hex) {
     const char = hex.toUpperCase();
     if (char >= '0' && char <= '9') return parseInt(char);
@@ -542,210 +555,179 @@ new Dialog({
             callback: (html) => {
                 const originName = html.find("#origin-name")[0].value || "Origin";
                 const destName = html.find("#dest-name")[0].value || "Destination";
-                const originUWP = html.find("#origin-uwp")[0].value;
-                const destUWP = html.find("#dest-uwp")[0].value;
-                const parsecs = html.find("#parsec")[0].value -1;
-                const freightSkill = html.find("#freight-skill")[0].value ;
-                const passengerSkill = html.find("#passenger-skill")[0].value ;
+                let originUWP = html.find("#origin-uwp")[0].value;  // Changed to let
+                let destUWP = html.find("#dest-uwp")[0].value;      // Changed to let
+                const parsecs = html.find("#parsec")[0].value - 1;
+                const freightSkill = html.find("#freight-skill")[0].value;
+                const passengerSkill = html.find("#passenger-skill")[0].value;
 
-                const origin = parseUWP(originUWP);
-                const destination = parseUWP(destUWP);
-                
-                if (!origin || !destination) {
-                    ui.notifications.error("Please enter valid UWP codes for both worlds!");
-                    return;
-                }
+                // Take World name instead of UWP if given
+                (async () => {
+                    if (originName != "Origin" && !originUWP) {
+                        originUWP = await getUWPfromTravellermapApi(originName);
+                    }
+                    if (destName != "Destination" && !destUWP) {
+                        destUWP = await getUWPfromTravellermapApi(destName);
+                    }
+                    
+                    console.log("Origin UWP:", originUWP);
+                    console.log("Destination UWP:", destUWP);
+                    const origin = parseUWP(originUWP);
+                    const destination = parseUWP(destUWP);
+                    
+                    if (!origin || !destination) {
+                        ui.notifications.error("Please enter valid UWP codes for both worlds!");
+                        return;
+                    }
 
-                const socDM = parseInt(html.find("#soc-dm")[0].value) || 0;
-                const stewardRank = parseInt(html.find("#steward-dm")[0].value) || 0;
-                const maxRank = parseInt(html.find("#max-rank")[0].value) || 0;
-                const destZone = parseInt(html.find("#dest-zone")[0].value) || 0;
-                const originZone = parseInt(html.find("#origin-zone")[0].value) || 0;
-                const isArmed = html.find("#ship-armed")[0].checked ? 1 : 0;
-                                
-                const freightRoll = skillRoll(freightSkill)
-                const passengerRoll = skillRoll(passengerSkill)
-                
-                const freightMods = calculateFreightMods(origin, destination, destZone, originZone, parsecs, freightRoll.effect,freightSkill );
-                const freightTotal = calculateTotal(freightMods);
-                const mailMods = calculateMailMods(socDM, maxRank, freightTotal,isArmed);
-                const mailTotal = calculateTotal(mailMods);
-                const mailAvailable = calculateMailAvailable(mailTotal)
-                const passengerMods = calculatePassengerMods(origin, destination, stewardRank, destZone, originZone, parsecs, passengerRoll.effect,passengerSkill);
-                const passengerTotal = calculateTotal(passengerMods);
-                const freightSizes = freightLotSizes()
-                
+                    const socDM = parseInt(html.find("#soc-dm")[0].value) || 0;
+                    const stewardRank = parseInt(html.find("#steward-dm")[0].value) || 0;
+                    const maxRank = parseInt(html.find("#max-rank")[0].value) || 0;
+                    const destZone = parseInt(html.find("#dest-zone")[0].value) || 0;
+                    const originZone = parseInt(html.find("#origin-zone")[0].value) || 0;
+                    const isArmed = html.find("#ship-armed")[0].checked ? 1 : 0;
+                                    
+                    const freightRoll = skillRoll(freightSkill)
+                    const passengerRoll = skillRoll(passengerSkill)
+                    
+                    const freightMods = calculateFreightMods(origin, destination, destZone, originZone, parsecs, freightRoll.effect, freightSkill);
+                    const freightTotal = calculateTotal(freightMods);
+                    const mailMods = calculateMailMods(socDM, maxRank, freightTotal, isArmed);
+                    const mailTotal = calculateTotal(mailMods);
+                    const mailAvailable = calculateMailAvailable(mailTotal)
+                    const passengerMods = calculatePassengerMods(origin, destination, stewardRank, destZone, originZone, parsecs, passengerRoll.effect, passengerSkill);
+                    const passengerTotal = calculateTotal(passengerMods);
+                    const freightSizes = freightLotSizes()
 
-                console.log(`F: ${freightRoll.total}`)
-                console.log(`P: ${passengerRoll.total}`)
+                    console.log(`F: ${freightRoll.total}`)
+                    console.log(`P: ${passengerRoll.total}`)
 
-               // const Availability = calculateAvailable(freightTotalAfterRoll, passengerTotalAfterRoll);
-
-                let resultsHTML = `
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div>
-                            <h4>${originName}</h4>
-                            <div style="font-family: monospace; font-size: 14px; margin-bottom: 5px;">UWP: ${originUWP}</div>
-                            <div style="font-size: 12px;">
-                                Starport: ${origin.starport}, <br> Size: ${origin.size},<br> Atmosphere: ${origin.atmosphere}, <br> Hydrographics: ${origin.hydrographics},<br>
-                                Population: ${origin.population}, <br> Government: ${origin.government}, <br> Law: ${origin.lawLevel}, <br> Tech: ${origin.techLevel}
+                    let resultsHTML = `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <h4>${originName}</h4>
+                                <div style="font-family: monospace; font-size: 14px; margin-bottom: 5px;">UWP: ${originUWP}</div>
+                                <div style="font-size: 12px;">
+                                    Starport: ${origin.starport}, <br> Size: ${origin.size},<br> Atmosphere: ${origin.atmosphere}, <br> Hydrographics: ${origin.hydrographics},<br>
+                                    Population: ${origin.population}, <br> Government: ${origin.government}, <br> Law: ${origin.lawLevel}, <br> Tech: ${origin.techLevel}
+                                </div>
+                            </div>
+                            <div>
+                                <h4>${destName}</h4>
+                                <div style="font-family: monospace; font-size: 14px; margin-bottom: 5px;">UWP: ${destUWP}</div>
+                                <div style="font-size: 12px;">
+                                    Starport: ${destination.starport}, <br> Size: ${destination.size}, <br> Atmosphere: ${destination.atmosphere}, <br> Hydrographics: ${destination.hydrographics}, <br>
+                                    Population: ${destination.population}, <br> Government: ${destination.government}, <br> Law: ${destination.lawLevel}, <br> Tech: ${destination.techLevel}
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <h4>${destName}</h4>
-                            <div style="font-family: monospace; font-size: 14px; margin-bottom: 5px;">UWP: ${destUWP}</div>
+
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+
+                        <!-- Skills Block -->
+                        <div style="border: 1px solid #95a5a6; padding: 10px; border-radius: 5px;">
+                            <h4 style="margin-top: 0; color: #95a5a6;">Skills</h4>
                             <div style="font-size: 12px;">
-                                Starport: ${destination.starport}, <br> Size: ${destination.size}, <br> Atmosphere: ${destination.atmosphere}, <br> Hydrographics: ${destination.hydrographics}, <br>
-                                Population: ${destination.population}, <br> Government: ${destination.government}, <br> Law: ${destination.lawLevel}, <br> Tech: ${destination.techLevel}
+                                Freight Skill :<strong>${freightSkill}</strong><br> 
+                                Dice : ${freightRoll.dice}<br>
+                                Difficulty : ${freightRoll.difficulty} <br>
+                                ${freightSkill} DM +${freightRoll.skillLevel}<br>
+                                ${freightRoll.stat} DM+${freightRoll.statDM}<br>
+                                Total Effect ${freightRoll.effect}<br>
+                                Passenger Skill :<strong>${passengerSkill}</strong><br>
+                                Dice : ${passengerRoll.dice}<br>
+                                Difficulty : ${passengerRoll.difficulty} <br>
+                                ${passengerSkill} DM +${passengerRoll.skillLevel}<br>
+                                ${passengerRoll.stat} DM+${passengerRoll.statDM}<br>
+                                Total Effect : ${passengerRoll.effect}
                             </div>
                         </div>
-                    </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-
-                    <!-- Skills Block -->
-                    <div style="border: 1px solid #95a5a6; padding: 10px; border-radius: 5px;">
-                        <h4 style="margin-top: 0; color: #95a5a6;">Skills</h4>
-                        <div style="font-size: 12px;">
-                            Freight Skill :<strong>${freightSkill}</strong><br> 
-                            Dice : ${freightRoll.dice}<br>
-                            Difficulty : ${freightRoll.difficulty} <br>
-                            ${freightSkill} DM +${freightRoll.skillLevel}<br>
-                            ${freightRoll.stat} DM+${freightRoll.statDM}<br>
-                            Total Effect ${freightRoll.effect}<br>
-                            Passenger Skill :<strong>${passengerSkill}</strong><br>
-                            Dice : ${passengerRoll.dice}<br>
-                            Difficulty : ${passengerRoll.difficulty} <br>
-                            ${passengerSkill} DM +${passengerRoll.skillLevel}<br>
-                            ${passengerRoll.stat} DM+${passengerRoll.statDM}<br>
-                            Total Effect : ${passengerRoll.effect}
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div style="border: 1px solid #3498db; padding: 10px; border-radius: 5px;">
+                                <h4 style="margin-top: 0; color: #3498db;">Freight</h4>
+                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                                    Total Modifier: ${freightTotal >= 0 ? '+' : ''}${freightTotal}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    ${freightMods.length > 0 ? freightMods.join('<br>') : 'No modifiers'}
+                                </div>
+                            </div>
+                            
+                            <div style="border: 1px solid #e74c3c; padding: 10px; border-radius: 5px;">
+                                <h4 style="margin-top: 0; color: #e74c3c;">Mail</h4>
+                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                                    Total Modifier: ${mailTotal >= 0 ? '+' : ''}${mailTotal}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    ${mailMods.length > 0 ? mailMods.join('<br>') : 'No modifiers'}
+                                </div>
+                            </div>
+                            
+                            <div style="border: 1px solid #f39c12; padding: 10px; border-radius: 5px;">
+                                <h4 style="margin-top: 0; color: #f39c12;">Passengers</h4>
+                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+                                    Total Modifier: ${passengerTotal >= 0 ? '+' : ''}${passengerTotal}
+                                </div>
+                                <div style="font-size: 12px;">
+                                    ${passengerMods.length > 0 ? passengerMods.join('<br>') : 'No modifiers'}
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                        <!-- Freight Skill Block
-                    <div style="border: 1px solid #3498db; padding: 10px; border-radius: 5px;">
-                        <h4 style="margin-top: 0; color: #3498db;">${freightSkill}</h4>
-                        <div style="font-size: 12px;">
-                            Dice : ${freightRoll.dice}<br>
-                            ${freightSkill} DM +${freightRoll.skillLevel}<br>
-                            ${freightRoll.stat} DM+${freightRoll.statDM}<br>
-                            Total ${freightRoll.effect}
-                        </div>
-                    </div>
-                     -->
-
-                    <!-- Passenger Skill Block 
-                    <div style="border: 1px solid #e74c3c; padding: 10px; border-radius: 5px;">
-                        <h4 style="margin-top: 0; color: #e74c3c;">${passengerSkill}</h4>
-                        <div style="font-size: 12px;">
-                            Dice : ${passengerRoll.dice}<br>
-                            ${passengerSkill} DM +${passengerRoll.skillLevel}<br>
-                            ${passengerRoll.stat} DM+${passengerRoll.statDM}<br>
-                            Total ${passengerRoll.effect}
-                        </div>
-                    </div>
-                    -->
-
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <!-- Freight Block -->
                         <div style="border: 1px solid #3498db; padding: 10px; border-radius: 5px;">
                             <h4 style="margin-top: 0; color: #3498db;">Freight</h4>
-                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-                                Total Modifier: ${freightTotal >= 0 ? '+' : ''}${freightTotal}
-                            </div>
                             <div style="font-size: 12px;">
-                                ${freightMods.length > 0 ? freightMods.join('<br>') : 'No modifiers'}
+                                <strong>Major Cargo:</strong><br>
+                                Available lots : ${rollDice(calculateAvailable("Freight",freightTotal -4)).diceTotal}*${freightSizes.Major} Ton Lots <br>
+                                <strong>Minor Cargo :</strong><br>
+                                Available lots : ${rollDice(calculateAvailable("Freight",freightTotal)).diceTotal}*${freightSizes.Minor} Ton Lots<br>
+                                <strong>Incidental Cargo :</strong><br>
+                                Available lots : ${rollDice(calculateAvailable("Freight",freightTotal +2)).diceTotal}*${freightSizes.Incidental} Ton Lots
                             </div>
                         </div>
-                        
+
+                        <!-- Mail Block -->
                         <div style="border: 1px solid #e74c3c; padding: 10px; border-radius: 5px;">
                             <h4 style="margin-top: 0; color: #e74c3c;">Mail</h4>
-                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-                                Total Modifier: ${mailTotal >= 0 ? '+' : ''}${mailTotal}
-                            </div>
                             <div style="font-size: 12px;">
-                                ${mailMods.length > 0 ? mailMods.join('<br>') : 'No modifiers'}
+                                <strong>Mail Available</strong><br>
+                                 There are ${mailAvailable} lots of mail (${mailAvailable*5} tons), you must take all lots
                             </div>
                         </div>
-                        
+
+                        <!-- Passengers Block -->
                         <div style="border: 1px solid #f39c12; padding: 10px; border-radius: 5px;">
                             <h4 style="margin-top: 0; color: #f39c12;">Passengers</h4>
-                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-                                Total Modifier: ${passengerTotal >= 0 ? '+' : ''}${passengerTotal}
-                            </div>
                             <div style="font-size: 12px;">
-                                ${passengerMods.length > 0 ? passengerMods.join('<br>') : 'No modifiers'}
+                                <strong>High:</strong><br> 
+                                Available High Passengers (-4): ${rollDice(calculateAvailable("Passengers",passengerTotal -4 )).diceTotal}<br>
+                                <strong>Medium:</strong><br> 
+                                Available Medium Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal )).diceTotal}<br>
+                                <strong>Basic:</strong><br> 
+                                Available Basic Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal)).diceTotal}<br>
+                                <strong>Low (+2):</strong><br> 
+                                Available Low Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal +2 )).diceTotal}
                             </div>
                         </div>
-                    </div>
+                    `;
+                 
+                    // Create chat message
+                    const chatData = {
+                        user: game.user.id,
+                        content: `
+                            <div style="border: 2px solid #2c3e50; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
+                                <h3 style="margin-top: 0; color: #2c3e50;"> Trade Route Analysis</h3>
+                                ${resultsHTML}
+                            </div>
+                        `
+                    };
                     
-                   
-    <!-- Route Block 
-    <div style="border: 1px solid #95a5a6; padding: 10px; border-radius: 5px;">
-        <h4 style="margin-top: 0; color: #95a5a6;">Route</h4>
-        <div style="font-size: 12px;">
-            <strong>${originName}</strong> → <strong>${destName}</strong>
-        </div>
-    </div>
-    -->
-
-    <!-- Freight Block -->
-    <div style="border: 1px solid #3498db; padding: 10px; border-radius: 5px;">
-        <h4 style="margin-top: 0; color: #3498db;">Freight</h4>
-        <div style="font-size: 12px;">
-            <strong>Major Cargo:</strong><br>
-            <!-- FreightDM ${freightTotal} + Major ${-4}  : ${ freightTotal -4} -->
-            Available lots : ${rollDice(calculateAvailable("Freight",freightTotal -4)).diceTotal}*${freightSizes.Major} Ton Lots <br>
-            <strong>Minor Cargo :</strong><br>
-            <!-- FreightDM ${freightTotal} + Minor ${0}  : ${ freightTotal -0}-->
-            Available lots : ${rollDice(calculateAvailable("Freight",freightTotal)).diceTotal}*${freightSizes.Minor} Ton Lots<br>
-            <strong>Incidental Cargo :</strong><br>
-            <!-- FreightDM ${freightTotal} + Incidental ${+2}  : ${ freightTotal +2}-->
-            Available lots : ${rollDice(calculateAvailable("Freight",freightTotal +2)).diceTotal}*${freightSizes.Incidental} Ton Lots
-        </div>
-    </div>
-
-    <!-- Mail Block -->
-    <div style="border: 1px solid #e74c3c; padding: 10px; border-radius: 5px;">
-        <h4 style="margin-top: 0; color: #e74c3c;">Mail</h4>
-        <div style="font-size: 12px;">
-            <strong>Mail Available</strong><br>
-             There are ${mailAvailable} lots of mail (${mailAvailable*5} tons), you must take all lots
-        </div>
-    </div>
-
-    <!-- Passengers Block -->
-    <div style="border: 1px solid #f39c12; padding: 10px; border-radius: 5px;">
-        <h4 style="margin-top: 0; color: #f39c12;">Passengers</h4>
-        <div style="font-size: 12px;">
-            <strong>High:</strong><br> 
-            <!-- PassengerDM ${passengerTotal} HighDM: +${-4} : ${passengerTotal -4} --> 
-            Available High Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal -4 )).diceTotal}<br>
-            <strong>Medium:</strong><br> 
-             <!--  PassengerDM ${passengerTotal} MediumDM: +${0} : ${passengerTotal} -->
-            Available Medium Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal )).diceTotal}<br>
-            <strong>Basic:</strong><br> 
-             <!-- PassengerDM ${passengerTotal} BasicDM: +${0} : ${passengerTotal} -->
-            Available Basic Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal)).diceTotal}<br>
-            <strong>Low:</strong><br> 
-             <!-- PassengerDM ${passengerTotal} LowDM: +${+2} : ${passengerTotal +2} -->
-            Available Low Passengers : ${rollDice(calculateAvailable("Passengers",passengerTotal +2 )).diceTotal}
-        </div>
-    </div>
-                `;
-             // #1abc9c  final output colour   
-                // Create chat message
-                const chatData = {
-                    user: game.user.id,
-                    content: `
-                        <div style="border: 2px solid #2c3e50; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-                            <h3 style="margin-top: 0; color: #2c3e50;"> Trade Route Analysis</h3>
-                            ${resultsHTML}
-                        </div>
-                    `
-                };
-                
-                ChatMessage.create(chatData);
-                ui.notifications.info("Trade modifiers calculated and posted to chat!");
+                    ChatMessage.create(chatData);
+                    ui.notifications.info("Trade modifiers calculated and posted to chat!");
+                    
+                })();
             }
         },
         cancel: {
@@ -790,5 +772,3 @@ new Dialog({
     height: 600,
     resizable: true
 }).render(true);
-
-
